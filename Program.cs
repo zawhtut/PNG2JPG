@@ -35,26 +35,41 @@ namespace PNG2JPG5
                 string ext = Path.GetExtension(file).ToLower();
                 if (ext == ".png")
                 {
-                    string name = Path.GetFileNameWithoutExtension(file);
-                    string? path = Path.GetDirectoryName(file);
-
-                    using (Image image = Image.Load(file))
+                    try
                     {
-                        image.Save(path + @"/" + name + ".jpg", new JpegEncoder());
+                        string name = Path.GetFileNameWithoutExtension(file);
+                        string? path = Path.GetDirectoryName(file);
+
+                        using (Image image = Image.Load(file))
+                        {
+                            image.Save(path + @"/" + name + ".jpg", new JpegEncoder());
+                        }
+
+                        count++;
+
+                        // Update spinner.
+                        Console.SetCursorPosition(0, Console.CursorTop);
+                        Console.Write($"Processing {spinner[spinIndex]}  {count} file(s) converted.");
+
+                        // Move to next spinner index
+                        spinIndex = (spinIndex + 1) % spinner.Length;
+
+                        if (deleteOriginals)
+                        {
+                            File.Delete(file);
+                        }
                     }
-
-                    count++;
-
-                    // Update spinner.
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.Write($"Processing {spinner[spinIndex]}  {count} file(s) converted.");
-
-                    // Move to next spinner index
-                    spinIndex = (spinIndex + 1) % spinner.Length;
-
-                    if (deleteOriginals)
+                    catch (SixLabors.ImageSharp.UnknownImageFormatException)
                     {
-                        File.Delete(file);
+                        Console.WriteLine($"The file {file} is not a recognized image format.");
+                    }
+                    catch (IOException ioException)
+                    {
+                        Console.WriteLine($"An I/O error occurred while processing {file}: {ioException.Message}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"An unknown error occurred while processing {file}: {ex.Message}");
                     }
                 }
             }
